@@ -264,6 +264,14 @@
         { id: 'sad', name: 'Грустный', icon: '🌙', color: '#6366f1', seeds: { valence: 0.2, energy: 0.3, acousticness: 0.6 } },
         { id: 'party', name: 'Вечеринка', icon: '🎉', color: '#a855f7', seeds: { danceability: 0.8, energy: 0.8, valence: 0.7 } }
     ];
+    async function safeJson(response) {
+    const text = await response.text();
+    try {
+        return text ? JSON.parse(text) : {};
+    } catch {
+        return { error: { message: text || 'Invalid JSON' } };
+    }
+}
 
     function generateRandomString(length) {
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -417,11 +425,12 @@
                 throw new Error(errorData.error && errorData.error.message ? errorData.error.message : 'HTTP ' + response.status);
             }
 
-            const data = await response.json();
+                const data = await safeJson(response);
             
             if (!data.tracks || data.tracks.length === 0) {
                 throw new Error('Не найдено треков для этого настроения');
             }
+            
 
             return data.tracks.map(track => track.uri);
         } catch (error) {
