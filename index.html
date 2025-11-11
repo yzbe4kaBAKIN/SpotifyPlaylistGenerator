@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор плейлистов Spotify</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-screen {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 30px;
+            padding: 50px;
+            text-align: center;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #1DB954;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        h2 {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+        }
+
+        .login-title {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .login-subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: #1DB954;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #1ed760;
+            transform: scale(1.05);
+        }
+
+        .btn:disabled {
+            background: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .moods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .mood-btn {
+            padding: 30px 20px;
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mood-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .mood-btn.selected {
+            ring: 4px solid white;
+            transform: scale(1.08);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .mood-icon {
+            font-size: 32px;
+        }
+
+        .input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: white;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .message.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 2px solid #22c55e;
+            color: white;
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid #ef4444;
+            color: white;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Экран входа -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="logo">🎵</div>
+            <h2 class="login-title">Mood Playlists</h2>
+            <p class="login-subtitle">Создавайте плейлисты по настроению</p>
+            <button class="btn" onclick="handleLogin()">Войти через Spotify</button>
+            <p style="margin-top: 20px; color: #999; font-size: 14px;">
+                Необходимо подключить Spotify аккаунт
+            </p>
+        </div>
+    </div>
+
+    <!-- Главный экран -->
+    <div id="mainScreen" class="hidden">
+        <div class="card">
+            <h1>🎵 Генератор плейлистов</h1>
+            <p class="subtitle">Выберите настроение и создайте идеальный плейлист</p>
+        </div>
+
+        <div class="card">
+            <h2>Выберите настроение</h2>
+            <div class="moods-grid" id="moodsGrid"></div>
+        </div>
+
+        <div class="card">
+            <h2>Создать плейлист</h2>
+            <input
+                    type="text"
+                    id="playlistName"
+                    class="input"
+                    placeholder="Название плейлиста"
+            >
+            <button class="btn" id="createBtn" onclick="createPlaylist()">
+                ➕ Создать плейлист
+            </button>
+            <div id="message"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Настройки Spotify API
+    const CLIENT_ID = 'ВАШ_CLIENT_ID';
+    const REDIRECT_URI = window.location.origin + window.location.pathname;
+    const SCOPES = 'playlist-modify-public playlist-modify-private user-read-private';
+
+    // Глобальные переменные
+    let accessToken = null;
+    let userId = null;
+    let selectedMood = null;
+
+    // Определение настроений
+    const moods = [
+        { id: 'happy', name: 'Счастливый', icon: '☀️', color: '#f59e0b', seeds: { valence: 0.8, energy: 0.7 } },
+        { id: 'energetic', name: 'Энергичный', icon: '⚡', color: '#ef4444', seeds: { energy: 0.9, tempo: 140 } },
+        { id: 'chill', name: 'Расслабленный', icon: '☕', color: '#60a5fa', seeds: { valence: 0.5, energy: 0.3 } },
+        { id: 'romantic', name: 'Романтичный', icon: '❤️', color: '#ec4899', seeds: { valence: 0.7, acousticness: 0.6 } },
+        { id: 'sad', name: 'Грустный', icon: '🌙', color: '#6366f1', seeds: { valence: 0.2, energy: 0.3 } },
+        { id: 'party', name: 'Вечеринка', icon: '🎉', color: '#a855f7', seeds: { danceability: 0.8, energy: 0.8 } }
+    ];
+
+    // Инициализация при загрузке
+    window.addEventListener('DOMContentLoaded', () => {
+        const hash = window.location.hash;
+        if (hash) {
+            const token = hash.substring(1).split('&')
+                .find(elem => elem.startsWith('access_token'))
+                ?.split('=')[1];
+
+            if (token) {
+                accessToken = token;
+                window.location.hash = '';
+                initApp();
+            }
+        }
+    });
+
+    function handleLogin() {
+        const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}&response_type=token&show_dialog=true`;
+        window.location.href = authUrl;
+    }
+
+    async function initApp() {
+        try {
+            const response = await fetch('https://api.spotify.com/v1/me', {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            const data = await response.json();
+            userId = data.id;
+
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainScreen').classList.remove('hidden');
+
+            renderMoods();
+        } catch (error) {
+            showMessage('Ошибка при получении профиля', 'error');
+        }
+    }
+
+    function renderMoods() {
+        const grid = document.getElementById('moodsGrid');
+        grid.innerHTML = moods.map(mood => `
+                <button
+                    class="mood-btn"
+                    style="background: ${mood.color};"
+                    onclick="selectMood('${mood.id}')"
+                    id="mood-${mood.id}"
+                >
+                    <span class="mood-icon">${mood.icon}</span>
+                    <span>${mood.name}</span>
+                </button>
+            `).join('');
+    }
+
+    function selectMood(moodId) {
+        selectedMood = moodId;
+
+        document.querySelectorAll('.mood-btn').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+
+        document.getElementById(`mood-${moodId}`).classList.add('selected');
+    }
+
+    async function searchTracksByMood(mood) {
+        const genres = ['pop', 'rock', 'electronic', 'indie', 'hip-hop'];
+        const randomGenres = genres.sort(() => 0.5 - Math.random()).slice(0, 2);
+
+        const params = new URLSearchParams({
+            limit: '30',
+            market: 'RU',
+            seed_genres: randomGenres.join(','),
+            target_valence: mood.seeds.valence || 0.5,
+            target_energy: mood.seeds.energy || 0.5,
+            target_danceability: mood.seeds.danceability || 0.5,
+            target_acousticness: mood.seeds.acousticness || 0.3,
+        });
+
+        if (mood.seeds.tempo) {
+            params.append('target_tempo', mood.seeds.tempo);
+        }
+
+        const response = await fetch(`https://api.spotify.com/v1/recommendations?${params}`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+
+        if (!response.ok) throw new Error('Ошибка поиска треков');
+
+        const data = await response.json();
+        return data.tracks.map(track => track.uri);
+    }
+
+    async function createPlaylist() {
+        const playlistName = document.getElementById('playlistName').value.trim();
+
+        if (!selectedMood || !playlistName) {
+            showMessage('Выберите настроение и введите название плейлиста', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('createBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>Создаём...';
+        showMessage('Создаём плейлист...', 'success');
+
+        try {
+            const mood = moods.find(m => m.id === selectedMood);
+
+            // Получаем треки
+            const trackUris = await searchTracksByMood(mood);
+
+            // Создаём плейлист
+            const createResponse = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: playlistName,
+                    description: `Плейлист для настроения: ${mood.name}. Создано автоматически.`,
+                    public: false
+                })
+            });
+
+            if (!createResponse.ok) throw new Error('Ошибка создания плейлиста');
+
+            const playlist = await createResponse.json();
+
+            // Добавляем треки
+            await fetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ uris: trackUris })
+            });
+
+            showMessage(`✓ Плейлист "${playlistName}" создан успешно! Добавлено ${trackUris.length} треков.`, 'success');
+            document.getElementById('playlistName').value = '';
+
+            // Сбрасываем выбор настроения
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            selectedMood = null;
+
+        } catch (error) {
+            showMessage(`Ошибка: ${error.message}`, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '➕ Создать плейлист';
+        }
+    }
+
+    function showMessage(text, type) {
+        const msgDiv = document.getElementById('message');
+        msgDiv.className = `message ${type}`;
+        msgDiv.textContent = text;
+        msgDiv.style.display = 'block';
+    }
+</script>
+</body>
+</html>
