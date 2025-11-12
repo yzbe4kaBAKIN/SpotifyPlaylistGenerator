@@ -528,25 +528,89 @@
     }
 
     // Поиск треков по настроению
-    async function searchTracksByMood(mood, languages, genres) {
-        const tracks = [];
-        const searches = [];
+    // Поиск треков по настроению — гарантирует 30 уникальных треков
+async function searchTracksByMood(mood, languages, genres) {
+    const trackUris = new Set();
+    const targetCount = 30;
+    const maxAttempts = 10; // на случай, если совсем мало треков
+    let attempts = 0;
 
-        // Формируем поисковые запросы
+    // Генерируем все возможные комбинации запросов
+    const generateQueries = () => {
+        const queries = [];
         languages.forEach(lang => {
-            const moodSeeds = mood.seeds[lang];
-            
-            genres.forEach(genre => {
-                moodSeeds.forEach(seed => {
-                    searches.push(`${seed} ${genre}`);
+            const moodSeeds = mood.seeds[lang] || [];
+            if (genres.length > 0) {
+                genres.forEach(genre => {
+                    moodSeeds.forEach(seed => {
+                        queries.push(`${seed} ${genre}`);
+                    });
                 });
-            });
-
-            // Если жанры не выбраны, ищем только по настроению
-            if (genres.length === 0) {
-                searches.push(...moodSeeds);
+            } else {
+                queries.push(...moodSeeds);
             }
         });
+        return queries.length > 0 ? queries : mood.seeds.en; // fallback
+    };
+
+    const baseQueries = generateQueries();
+
+    // Если совсем мало запросов — добавим вариации
+    const allQueries = baseQueries.length < 3
+        ? [...baseQueries, ...baseQueries.map(q => q + ' remix'), ...baseQueries.map(q => q + ' live')]
+        : baseQueries;
+
+    while (trackUris.size < targetCount && attempts < maxAttempts) {
+        attempts++;
+        const shuffled = [...allQueries].sort(() => Math.random() - 0.5);
+        
+        for (const query of shuffled) {
+            if (trackUris.size >= targetCount) break;
+
+            let offset = 0;
+            const limit = 10;
+            let pageFetched = false;
+
+            while (trackUris.size < targetCount && !pageFetched && offset < 50) {
+                try {
+                    const response = await fetch(
+                        `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}&offset=${offset}`,
+                        {
+                            headers: { 'Authorization': `Bearer ${accessToken}` }
+                        }
+                    );
+
+                    if (!response.ok) break;
+
+                    const data = await response.json();
+                    const tracks = data.tracks?.items || [];
+
+                    if (tracks.length === 0) {
+                        pageFetched = true;
+                        break;
+                    }
+
+                    for (const track of tracks) {
+                        if (trackUris.size >= targetCount) break;
+                        if (track.uri) {
+                            trackUris.add(track.uri);
+                        }
+                    }
+
+                    offset += limit;
+                    if (tracks.length < limit) pageFetched = true;
+
+                } catch (error) {
+                    console.error('Ошибка поиска:', error);
+                    break;
+                }
+            }
+        }
+    }
+
+    // Возвращаем ровно 30 (или сколько есть)
+    return Array.from(trackUris).slice(0, targetCount);
+}
 
         // Выполняем поиск
         for (const query of searches) {
