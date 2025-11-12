@@ -237,6 +237,16 @@
         </div>
 
         <div class="card">
+            <h2>Выберите язык песен</h2>
+            <div class="moods-grid" id="languagesGrid"></div>
+        </div>
+
+        <div class="card">
+            <h2>Выберите жанры (необязательно)</h2>
+            <div class="moods-grid" id="genresGrid"></div>
+        </div>
+
+        <div class="card">
             <h2>Создать плейлист</h2>
             <input type="text" id="playlistName" class="input" placeholder="Название плейлиста">
             <button class="btn" id="createBtn">➕ Создать плейлист</button>
@@ -248,7 +258,7 @@
 <script>
     // Конфигурация Spotify API
     const CONFIG = {
-        clientId: '7e57a16117fb4356911ef8642239d066', // Замените на ваш Client ID
+        clientId: '7e57a16117fb4356911ef8642239d066',
         redirectUri: window.location.origin + window.location.pathname,
         scopes: [
             'playlist-modify-public',
@@ -284,53 +294,47 @@
             name: 'Счастливый', 
             icon: '😊', 
             color: '#FFD93D',
-            seeds: ['happy', 'upbeat', 'feel good'],
-            params: { valence: 0.8, energy: 0.7 }
+            seeds: { en: ['happy', 'upbeat', 'feel good'], ru: ['весёлый', 'позитив', 'хорошее настроение'] }
         },
         { 
             id: 'energetic', 
             name: 'Энергичный', 
             icon: '⚡', 
             color: '#FF6B6B',
-            seeds: ['workout', 'energetic', 'pump up'],
-            params: { energy: 0.9, danceability: 0.8 }
+            seeds: { en: ['workout', 'energetic', 'pump up'], ru: ['энергия', 'мотивация', 'драйв'] }
         },
         { 
             id: 'chill', 
             name: 'Спокойный', 
             icon: '😌', 
             color: '#4ECDC4',
-            seeds: ['chill', 'relax', 'ambient'],
-            params: { valence: 0.5, energy: 0.3 }
+            seeds: { en: ['chill', 'relax', 'ambient'], ru: ['спокойствие', 'релакс', 'отдых'] }
         },
         { 
             id: 'sad', 
             name: 'Грустный', 
             icon: '😢', 
             color: '#95A3B3',
-            seeds: ['sad', 'melancholy', 'emotional'],
-            params: { valence: 0.2, energy: 0.4 }
-        },
-        { 
-            id: 'party', 
-            name: 'Вечеринка', 
-            icon: '🎉', 
-            color: '#A569BD',
-            seeds: ['party', 'dance', 'club'],
-            params: { danceability: 0.9, energy: 0.8 }
-        },
-        { 
-            id: 'focus', 
-            name: 'Фокус', 
-            icon: '🎯', 
-            color: '#52B788',
-            seeds: ['focus', 'study', 'concentration'],
-            params: { instrumentalness: 0.7, energy: 0.5 }
+            seeds: { en: ['sad', 'melancholy', 'emotional'], ru: ['грустный', 'меланхолия', 'душевный'] }
         }
+    ];
+
+    // Жанры
+    const GENRES = [
+        { id: 'pop', name: 'Поп', icon: '🎤' },
+        { id: 'rock', name: 'Рок', icon: '🎸' },
+        { id: 'hip-hop', name: 'Хип-хоп', icon: '🎧' },
+        { id: 'electronic', name: 'Электроника', icon: '🎹' },
+        { id: 'jazz', name: 'Джаз', icon: '🎺' },
+        { id: 'classical', name: 'Классика', icon: '🎻' },
+        { id: 'r-n-b', name: 'R&B', icon: '🎵' },
+        { id: 'indie', name: 'Инди', icon: '🎼' }
     ];
 
     let accessToken = null;
     let selectedMood = null;
+    let selectedLanguages = [];
+    let selectedGenres = [];
     let userId = null;
 
     // Инициализация приложения
@@ -338,6 +342,8 @@
         checkAuth();
         setupEventListeners();
         renderMoods();
+        renderLanguages();
+        renderGenres();
     }
 
     // Проверка авторизации
@@ -461,14 +467,92 @@
         document.querySelector(`[data-mood="${moodId}"]`).classList.add('selected');
     }
 
-    // Поиск треков по настроению
-    async function searchTracksByMood(mood) {
-        const tracks = [];
+    // Рендер языков
+    function renderLanguages() {
+        const container = document.getElementById('languagesGrid');
+        container.innerHTML = `
+            <button class="mood-btn" data-lang="en" style="background: #3b82f6">
+                <span class="mood-icon">🇬🇧</span>
+                <span>Английский</span>
+            </button>
+            <button class="mood-btn" data-lang="ru" style="background: #ef4444">
+                <span class="mood-icon">🇷🇺</span>
+                <span>Русский</span>
+            </button>
+        `;
+
+        document.querySelectorAll('[data-lang]').forEach(btn => {
+            btn.addEventListener('click', () => toggleLanguage(btn.dataset.lang));
+        });
+    }
+
+    // Переключение языка
+    function toggleLanguage(lang) {
+        const btn = document.querySelector(`[data-lang="${lang}"]`);
         
-        for (const seed of mood.seeds) {
+        if (selectedLanguages.includes(lang)) {
+            selectedLanguages = selectedLanguages.filter(l => l !== lang);
+            btn.classList.remove('selected');
+        } else {
+            selectedLanguages.push(lang);
+            btn.classList.add('selected');
+        }
+    }
+
+    // Рендер жанров
+    function renderGenres() {
+        const container = document.getElementById('genresGrid');
+        container.innerHTML = GENRES.map(genre => `
+            <button class="mood-btn" data-genre="${genre.id}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+                <span class="mood-icon">${genre.icon}</span>
+                <span>${genre.name}</span>
+            </button>
+        `).join('');
+
+        document.querySelectorAll('[data-genre]').forEach(btn => {
+            btn.addEventListener('click', () => toggleGenre(btn.dataset.genre));
+        });
+    }
+
+    // Переключение жанра
+    function toggleGenre(genreId) {
+        const btn = document.querySelector(`[data-genre="${genreId}"]`);
+        
+        if (selectedGenres.includes(genreId)) {
+            selectedGenres = selectedGenres.filter(g => g !== genreId);
+            btn.classList.remove('selected');
+        } else {
+            selectedGenres.push(genreId);
+            btn.classList.add('selected');
+        }
+    }
+
+    // Поиск треков по настроению
+    async function searchTracksByMood(mood, languages, genres) {
+        const tracks = [];
+        const searches = [];
+
+        // Формируем поисковые запросы
+        languages.forEach(lang => {
+            const moodSeeds = mood.seeds[lang];
+            
+            genres.forEach(genre => {
+                moodSeeds.forEach(seed => {
+                    searches.push(`${seed} ${genre}`);
+                });
+            });
+
+            // Если жанры не выбраны, ищем только по настроению
+            if (genres.length === 0) {
+                searches.push(...moodSeeds);
+            }
+        });
+
+        // Выполняем поиск
+        for (const query of searches) {
             try {
                 const response = await fetch(
-                    `https://api.spotify.com/v1/search?q=${encodeURIComponent(seed)}&type=track&limit=10`,
+                    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=8`,
                     {
                         headers: { 'Authorization': `Bearer ${accessToken}` }
                     }
@@ -494,6 +578,11 @@
             return;
         }
 
+        if (selectedLanguages.length === 0) {
+            showMessage('Пожалуйста, выберите хотя бы один язык!', 'error');
+            return;
+        }
+
         const playlistName = document.getElementById('playlistName').value.trim();
         if (!playlistName) {
             showMessage('Введите название плейлиста!', 'error');
@@ -505,6 +594,17 @@
         createBtn.innerHTML = '<span class="spinner"></span>Создаём плейлист...';
 
         try {
+            // Создание описания
+            let description = `Настроение: ${selectedMood.name}`;
+            if (selectedLanguages.length > 0) {
+                const langNames = selectedLanguages.map(l => l === 'en' ? 'Английский' : 'Русский').join(', ');
+                description += ` | Языки: ${langNames}`;
+            }
+            if (selectedGenres.length > 0) {
+                const genreNames = selectedGenres.map(g => GENRES.find(genre => genre.id === g).name).join(', ');
+                description += ` | Жанры: ${genreNames}`;
+            }
+
             // Создание плейлиста
             const createResponse = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
                 method: 'POST',
@@ -514,7 +614,7 @@
                 },
                 body: JSON.stringify({
                     name: playlistName,
-                    description: `Плейлист в настроении: ${selectedMood.name}`,
+                    description: description,
                     public: false
                 })
             });
@@ -526,10 +626,10 @@
             const playlist = await createResponse.json();
 
             // Поиск треков
-            const trackUris = await searchTracksByMood(selectedMood);
+            const trackUris = await searchTracksByMood(selectedMood, selectedLanguages, selectedGenres);
 
             if (trackUris.length === 0) {
-                throw new Error('Не удалось найти треки для этого настроения');
+                throw new Error('Не удалось найти треки с выбранными параметрами');
             }
 
             // Добавление треков в плейлист
@@ -545,11 +645,13 @@
             showMessage(`✅ Плейлист "${playlistName}" успешно создан с ${trackUris.length} треками!`, 'success');
             document.getElementById('playlistName').value = '';
             
-            // Сброс выбранного настроения
+            // Сброс выбранных параметров
             document.querySelectorAll('.mood-btn').forEach(btn => {
                 btn.classList.remove('selected');
             });
             selectedMood = null;
+            selectedLanguages = [];
+            selectedGenres = [];
 
         } catch (error) {
             console.error('Ошибка:', error);
