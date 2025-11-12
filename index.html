@@ -246,9 +246,9 @@
 </div>
 
 <script>
-    // Конфигурация
+    // Конфигурация Spotify API
     const CONFIG = {
-        clientId: '7e57a16117fb4356911ef8642239d066',
+        clientId: '7e57a16117fb4356911ef8642239d066', // Замените на ваш Client ID
         redirectUri: window.location.origin + window.location.pathname,
         scopes: [
             'playlist-modify-public',
@@ -257,52 +257,72 @@
         ]
     };
 
-    // Настроения
+    // Генерация случайной строки для PKCE
+    function generateRandomString(length) {
+        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const values = crypto.getRandomValues(new Uint8Array(length));
+        return values.reduce((acc, x) => acc + possible[x % possible.length], '');
+    }
+
+    // SHA256 хеш для PKCE
+    async function sha256(plain) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(plain);
+        return window.crypto.subtle.digest('SHA-256', data);
+    }
+
+    // Base64 URL encode для PKCE
+    function base64urlencode(a) {
+        return btoa(String.fromCharCode.apply(null, new Uint8Array(a)))
+            .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    // Настроения с параметрами для поиска треков
     const MOODS = [
-        {
-            id: 'happy',
-            name: 'Счастливый',
-            icon: '😊',
+        { 
+            id: 'happy', 
+            name: 'Счастливый', 
+            icon: '😊', 
             color: '#FFD93D',
             seeds: ['happy', 'upbeat', 'feel good'],
             params: { valence: 0.8, energy: 0.7 }
         },
-        {
-            id: 'energetic',
-            name: 'Энергичный',
-            icon: '⚡',
+        { 
+            id: 'energetic', 
+            name: 'Энергичный', 
+            icon: '⚡', 
             color: '#FF6B6B',
             seeds: ['workout', 'energetic', 'pump up'],
             params: { energy: 0.9, danceability: 0.8 }
         },
-        {
-            id: 'chill',
-            name: 'Спокойный',
-            icon: '😌',
+        { 
+            id: 'chill', 
+            name: 'Спокойный', 
+            icon: '😌', 
             color: '#4ECDC4',
             seeds: ['chill', 'relax', 'ambient'],
             params: { valence: 0.5, energy: 0.3 }
         },
-        {
-            id: 'sad',
-            name: 'Грустный',
-            icon: '😢',
+        { 
+            id: 'sad', 
+            name: 'Грустный', 
+            icon: '😢', 
             color: '#95A3B3',
             seeds: ['sad', 'melancholy', 'emotional'],
             params: { valence: 0.2, energy: 0.4 }
         },
-        {
-            id: 'party',
-            name: 'Вечеринка',
-            icon: '🎉',
+        { 
+            id: 'party', 
+            name: 'Вечеринка', 
+            icon: '🎉', 
             color: '#A569BD',
             seeds: ['party', 'dance', 'club'],
             params: { danceability: 0.9, energy: 0.8 }
         },
-        {
-            id: 'focus',
-            name: 'Фокус',
-            icon: '🎯',
+        { 
+            id: 'focus', 
+            name: 'Фокус', 
+            icon: '🎯', 
             color: '#52B788',
             seeds: ['focus', 'study', 'concentration'],
             params: { instrumentalness: 0.7, energy: 0.5 }
@@ -321,28 +341,83 @@
     }
 
     // Проверка авторизации
-    function checkAuth() {
-        const hash = window.location.hash.substring(1);
-        const params = new URLSearchParams(hash);
+    async function checkAuth() {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        
+        if (code) {
+            // Получаем токен используя authorization code
+            const codeVerifier = sessionStorage.getItem('code_verifier');
+            
+            if (!codeVerifier) {
+                showLoginScreen();
+                return;
+            }
 
-        if (params.get('access_token')) {
-            accessToken = params.get('access_token');
-            window.history.replaceState({}, document.title, window.location.pathname);
-            showMainScreen();
-            getUserProfile();
+            try {
+                const response = await fetch('https://accounts.spotify.com/api/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        client_id: CONFIG.clientId,
+                        grant_type: 'authorization_code',
+                        code: code,
+                        redirect_uri: CONFIG.redirectUri,
+                        code_verifier: codeVerifier,
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.access_token) {
+                    accessToken = data.access_token;
+                    sessionStorage.setItem('access_token', accessToken);
+                    sessionStorage.removeItem('code_verifier');
+                    
+                    // Очищаем URL от code
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    
+                    showMainScreen();
+                    getUserProfile();
+                } else {
+                    throw new Error('Не удалось получить токен');
+                }
+            } catch (error) {
+                console.error('Ошибка авторизации:', error);
+                showLoginScreen();
+            }
         } else {
-            showLoginScreen();
+            // Проверяем сохраненный токен
+            const savedToken = sessionStorage.getItem('access_token');
+            if (savedToken) {
+                accessToken = savedToken;
+                showMainScreen();
+                getUserProfile();
+            } else {
+                showLoginScreen();
+            }
         }
     }
 
-    // Авторизация через Spotify
-    function login() {
+    // Авторизация через Spotify с PKCE
+    async function login() {
+        const codeVerifier = generateRandomString(64);
+        const hashed = await sha256(codeVerifier);
+        const codeChallenge = base64urlencode(hashed);
+
+        sessionStorage.setItem('code_verifier', codeVerifier);
+
         const authUrl = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
             client_id: CONFIG.clientId,
-            response_type: 'token',
+            response_type: 'code',
             redirect_uri: CONFIG.redirectUri,
-            scope: CONFIG.scopes.join(' ')
+            scope: CONFIG.scopes.join(' '),
+            code_challenge_method: 'S256',
+            code_challenge: codeChallenge,
         });
+        
         window.location.href = authUrl;
     }
 
@@ -378,18 +453,18 @@
     // Выбор настроения
     function selectMood(moodId) {
         selectedMood = MOODS.find(m => m.id === moodId);
-
+        
         document.querySelectorAll('.mood-btn').forEach(btn => {
             btn.classList.remove('selected');
         });
-
+        
         document.querySelector(`[data-mood="${moodId}"]`).classList.add('selected');
     }
 
     // Поиск треков по настроению
     async function searchTracksByMood(mood) {
         const tracks = [];
-
+        
         for (const seed of mood.seeds) {
             try {
                 const response = await fetch(
@@ -399,7 +474,7 @@
                     }
                 );
                 const data = await response.json();
-
+                
                 if (data.tracks && data.tracks.items) {
                     tracks.push(...data.tracks.items.map(track => track.uri));
                 }
@@ -407,7 +482,7 @@
                 console.error('Ошибка поиска треков:', error);
             }
         }
-
+        
         // Удаление дубликатов и ограничение до 30 треков
         return [...new Set(tracks)].slice(0, 30);
     }
@@ -469,7 +544,7 @@
 
             showMessage(`✅ Плейлист "${playlistName}" успешно создан с ${trackUris.length} треками!`, 'success');
             document.getElementById('playlistName').value = '';
-
+            
             // Сброс выбранного настроения
             document.querySelectorAll('.mood-btn').forEach(btn => {
                 btn.classList.remove('selected');
