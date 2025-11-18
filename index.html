@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -45,7 +46,7 @@
         }
 
         .title {
-            font-size: 52px;
+            font-size: 72px;
             font-weight: bold;
             line-height: 1.2;
             margin-bottom: 20px;
@@ -53,7 +54,7 @@
         }
 
         .subtitle {
-            font-size: 14px;
+            font-size: 22px;
             text-transform: uppercase;
             letter-spacing: 3px;
             color: #666;
@@ -61,7 +62,7 @@
         }
 
         .description {
-            font-size: 15px;
+            font-size: 20px;
             line-height: 1.8;
             color: #333;
             margin-bottom: 40px;
@@ -89,7 +90,8 @@
         /* Main Screen Styles */
         .main-screen {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #121212;
+            color: #FFFFFF;
             padding: 40px 20px;
         }
 
@@ -99,21 +101,21 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: #1A1A1A;
             border-radius: 20px;
             padding: 40px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            border: 1px solid #2A2A2A;
         }
 
         .header-card {
             text-align: center;
-            background: white;
+            background: linear-gradient(135deg, #1A1A1A 0%, #1F1F1F 100%);
         }
 
         .header-card h1 {
-            color: #1a1a1a;
+            color: #FFFFFF;
             font-size: 42px;
             margin-bottom: 10px;
             display: flex;
@@ -121,15 +123,14 @@
             justify-content: center;
             gap: 15px;
         }
-
         .header-card .subtitle {
-            color: #666;
+            color: #B3B3B3;
             font-size: 16px;
             letter-spacing: 1px;
         }
 
         h2 {
-            color: #1a1a1a;
+            color: #FFFFFF;
             font-size: 24px;
             margin-bottom: 25px;
             font-weight: 600;
@@ -143,14 +144,15 @@
         }
 
         .mood-btn {
-            padding: 30px 20px;
-            border: none;
-            border-radius: 15px;
+            background: #2A2A2A;
             color: white;
+            border: 1px solid #333;
+            transition: all 0.3s ease;
+            padding: 30px 20px;
+            border-radius: 15px;
             font-weight: bold;
             font-size: 16px;
             cursor: pointer;
-            transition: all 0.3s;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -160,13 +162,15 @@
 
         .mood-btn:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(29, 185, 84, 0.3);
+            border-color: #1DB954;
         }
 
         .mood-btn.selected {
-            outline: 4px solid #1a1a1a;
+            outline: 4px solid #1DB954;
             transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 30px rgba(29, 185, 84, 0.5);
+            border-color: #1DB954;
         }
 
         .mood-icon {
@@ -174,24 +178,29 @@
         }
 
         .input {
+            background: #2A2A2A;
+            border: 2px solid #333;
+            color: #FFFFFF;
+            caret-color: #1DB954;
             width: 100%;
             padding: 16px 20px;
             border-radius: 12px;
-            border: 2px solid #e0e0e0;
-            background: white;
-            color: #333;
             font-size: 16px;
             margin-bottom: 20px;
             transition: border-color 0.3s;
         }
 
         .input:focus {
-            outline: none;
             border-color: #1DB954;
+            box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.2);
+            outline: none;
         }
-
+        .input::placeholder {
+            color: #888;
+        }
         .create-btn {
             background-color: #1DB954;
+            transition: all 0.3s ease;
             color: white;
             border: none;
             padding: 16px 32px;
@@ -199,19 +208,20 @@
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
             width: 100%;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .create-btn:hover:not(:disabled) {
-            background-color: #1ed760;
-            transform: scale(1.02);
+            background-color: #22C55E;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(29, 185, 84, 0.4);
         }
 
         .create-btn:disabled {
-            background: #999;
+            background: #333333;
+            color: #777;
             cursor: not-allowed;
             transform: none;
         }
@@ -226,15 +236,17 @@
         }
 
         .message.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 2px solid #22C55E;
+            color: #22C55E;
             background: #d4edda;
-            border: 2px solid #28a745;
-            color: #155724;
         }
 
         .message.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid #EF4444;
+            color: #FF6B6B;
             background: #f8d7da;
-            border: 2px solid #dc3545;
-            color: #721c24;
         }
 
         .spinner {
@@ -279,139 +291,114 @@
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div id="loginScreen" class="login-screen">
-        <div class="image-section">
-            <svg class="music-image" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-                <!-- Music Note -->
-                <ellipse cx="200" cy="200" rx="120" ry="120" fill="#1DB954" opacity="0.1"/>
-                <ellipse cx="200" cy="200" rx="90" ry="90" fill="#1DB954" opacity="0.2"/>
-                
-                <!-- Main note stem -->
-                <rect x="190" y="120" width="12" height="140" fill="#1DB954" rx="6"/>
-                
-                <!-- Note head -->
-                <ellipse cx="180" cy="260" rx="35" ry="25" fill="#1DB954" transform="rotate(-20 180 260)"/>
-                
-                <!-- Second note stem -->
-                <rect x="240" y="140" width="12" height="120" fill="#1DB954" rx="6"/>
-                
-                <!-- Second note head -->
-                <ellipse cx="230" cy="260" rx="35" ry="25" fill="#1DB954" transform="rotate(-20 230 260)"/>
-                
-                <!-- Connecting beam -->
-                <path d="M 202 120 L 252 140 L 252 155 L 202 135 Z" fill="#1DB954"/>
-                
-                <!-- Decorative circles -->
-                <circle cx="140" cy="150" r="8" fill="#1DB954" opacity="0.6"/>
-                <circle cx="260" cy="180" r="6" fill="#1DB954" opacity="0.6"/>
-                <circle cx="170" cy="320" r="10" fill="#1DB954" opacity="0.4"/>
-                <circle cx="250" cy="310" r="7" fill="#1DB954" opacity="0.4"/>
-            </svg>
-        </div>
-
-        <div class="content-section">
-            <h2 class="subtitle">Генератор плейлистов</h2>
-            <h1 class="title">Почувствуй<br>свою музыку</h1>
-            <p class="description">
-                Создавайте персонализированные плейлисты на основе вашего настроения и предпочтений. 
-                Выбирайте между различными стилями, жанрами и языками, чтобы получить идеальную музыкальную подборку. 
-                Интегрируйтесь с Spotify для автоматического создания плейлистов прямо в вашем аккаунте.
-            </p>
-            <button class="login-btn" id="loginBtn">Войти с помощью Spotify</button>
-        </div>
+<!-- Login Screen -->
+<div id="loginScreen" class="login-screen">
+    <div class="image-section">
+       <img src="head.png" class="music-image">
     </div>
 
-    <!-- Main Screen -->
-    <div id="mainScreen" class="main-screen hidden">
-        <div class="container">
-            <div class="card header-card">
-                <h1>🎵 Генератор плейлистов</h1>
-                <p class="subtitle">Создайте идеальный плейлист под ваше настроение</p>
-            </div>
+    <div class="content-section">
+        <h2 class="subtitle">Генератор плейлистов</h2>
+        <h1 class="title">Почувствуй<br>свою музыку</h1>
+        <p class="description">
+            Создавайте персонализированные плейлисты на основе вашего настроения и предпочтений.
+            Выбирайте между различными стилями, жанрами и языками, чтобы получить идеальную музыкальную подборку.
+            Интегрируйтесь с Spotify для автоматического создания плейлистов прямо в вашем аккаунте.
+        </p>
+        <button class="login-btn" id="loginBtn">Войти с помощью Spotify</button>
+    </div>
+</div>
 
-            <div class="card">
-                <h2>Выберите настроение</h2>
-                <div class="moods-grid">
-                    <button class="mood-btn" data-mood="happy" style="background: #FFD93D">
-                        <span class="mood-icon">😊</span>
-                        <span>Счастливый</span>
-                    </button>
-                    <button class="mood-btn" data-mood="energetic" style="background: #FF6B6B">
-                        <span class="mood-icon">⚡</span>
-                        <span>Энергичный</span>
-                    </button>
-                    <button class="mood-btn" data-mood="chill" style="background: #4ECDC4">
-                        <span class="mood-icon">😌</span>
-                        <span>Спокойный</span>
-                    </button>
-                    <button class="mood-btn" data-mood="sad" style="background: #95A3B3">
-                        <span class="mood-icon">😢</span>
-                        <span>Грустный</span>
-                    </button>
-                </div>
-            </div>
+<!-- Main Screen -->
+<div id="mainScreen" class="main-screen hidden">
+    <div class="container">
+        <div class="card header-card">
+            <h1>🎵 Генератор плейлистов</h1>
+            <p class="subtitle">Создайте идеальный плейлист под ваше настроение</p>
+        </div>
 
-            <div class="card">
-                <h2>Выберите язык песен</h2>
-                <div class="moods-grid">
-                    <button class="mood-btn" data-lang="en" style="background: #3b82f6">
-                        <span class="mood-icon">🇬🇧</span>
-                        <span>Английский</span>
-                    </button>
-                    <button class="mood-btn" data-lang="ru" style="background: #ef4444">
-                        <span class="mood-icon">🇷🇺</span>
-                        <span>Русский</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>Выберите жанры (необязательно)</h2>
-                <div class="moods-grid">
-                    <button class="mood-btn" data-genre="pop" style="background: #8b5cf6">
-                        <span class="mood-icon">🎤</span>
-                        <span>Поп</span>
-                    </button>
-                    <button class="mood-btn" data-genre="rock" style="background: #ef4444">
-                        <span class="mood-icon">🎸</span>
-                        <span>Рок</span>
-                    </button>
-                    <button class="mood-btn" data-genre="hip-hop" style="background: #f59e0b">
-                        <span class="mood-icon">🎧</span>
-                        <span>Хип-хоп</span>
-                    </button>
-                    <button class="mood-btn" data-genre="electronic" style="background: #06b6d4">
-                        <span class="mood-icon">🎹</span>
-                        <span>Электроника</span>
-                    </button>
-                    <button class="mood-btn" data-genre="jazz" style="background: #84cc16">
-                        <span class="mood-icon">🎺</span>
-                        <span>Джаз</span>
-                    </button>
-                    <button class="mood-btn" data-genre="classical" style="background: #a855f7">
-                        <span class="mood-icon">🎻</span>
-                        <span>Классика</span>
-                    </button>
-                    <button class="mood-btn" data-genre="r-n-b" style="background: #ec4899">
-                        <span class="mood-icon">🎵</span>
-                        <span>R&B</span>
-                    </button>
-                    <button class="mood-btn" data-genre="indie" style="background: #14b8a6">
-                        <span class="mood-icon">🎼</span>
-                        <span>Инди</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>Создать плейлист</h2>
-                <input type="text" id="playlistName" class="input" placeholder="Введите название плейлиста">
-                <button class="create-btn" id="createBtn">Создать плейлист</button>
-                <div id="message" class="message"></div>
+        <div class="card">
+            <h2>Выберите настроение</h2>
+            <div class="moods-grid">
+                <button class="mood-btn" data-mood="happy" style="background: #FFD93D">
+                    <span class="mood-icon">😊</span>
+                    <span>Счастливый</span>
+                </button>
+                <button class="mood-btn" data-mood="energetic" style="background: #FF6B6B">
+                    <span class="mood-icon">⚡</span>
+                    <span>Энергичный</span>
+                </button>
+                <button class="mood-btn" data-mood="chill" style="background: #4ECDC4">
+                    <span class="mood-icon">😌</span>
+                    <span>Спокойный</span>
+                </button>
+                <button class="mood-btn" data-mood="sad" style="background: #95A3B3">
+                    <span class="mood-icon">😢</span>
+                    <span>Грустный</span>
+                </button>
             </div>
         </div>
+
+        <div class="card">
+            <h2>Выберите язык песен</h2>
+            <div class="moods-grid">
+                <button class="mood-btn" data-lang="en" style="background: #3b82f6">
+                    <span class="mood-icon">🇬🇧</span>
+                    <span>Английский</span>
+                </button>
+                <button class="mood-btn" data-lang="ru" style="background: #ef4444">
+                    <span class="mood-icon">🇷🇺</span>
+                    <span>Русский</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Выберите жанры (необязательно)</h2>
+            <div class="moods-grid">
+                <button class="mood-btn" data-genre="pop" style="background: #8b5cf6">
+                    <span class="mood-icon">🎤</span>
+                    <span>Поп</span>
+                </button>
+                <button class="mood-btn" data-genre="rock" style="background: #ef4444">
+                    <span class="mood-icon">🎸</span>
+                    <span>Рок</span>
+                </button>
+                <button class="mood-btn" data-genre="hip-hop" style="background: #f59e0b">
+                    <span class="mood-icon">🎧</span>
+                    <span>Хип-хоп</span>
+                </button>
+                <button class="mood-btn" data-genre="electronic" style="background: #06b6d4">
+                    <span class="mood-icon">🎹</span>
+                    <span>Электроника</span>
+                </button>
+                <button class="mood-btn" data-genre="jazz" style="background: #84cc16">
+                    <span class="mood-icon">🎺</span>
+                    <span>Джаз</span>
+                </button>
+                <button class="mood-btn" data-genre="classical" style="background: #a855f7">
+                    <span class="mood-icon">🎻</span>
+                    <span>Классика</span>
+                </button>
+                <button class="mood-btn" data-genre="r-n-b" style="background: #ec4899">
+                    <span class="mood-icon">🎵</span>
+                    <span>R&B</span>
+                </button>
+                <button class="mood-btn" data-genre="indie" style="background: #14b8a6">
+                    <span class="mood-icon">🎼</span>
+                    <span>Инди</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Создать плейлист</h2>
+            <input type="text" id="playlistName" class="input" placeholder="Введите название плейлиста">
+            <button class="create-btn" id="createBtn">Создать плейлист</button>
+            <div id="message" class="message"></div>
+        </div>
     </div>
+</div>
 
 <script>
     // Конфигурация Spotify API
