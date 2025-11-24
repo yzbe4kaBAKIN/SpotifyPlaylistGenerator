@@ -225,75 +225,76 @@ function toggleGenre(genreId) {
 }
 
 //
-// 🔥 УЛУЧШЕННЫЙ ПОИСК ТРЕКОВ (ровно 30 треков)
+//  🔥 УЛУЧШЕННЫЙ ПОИСК ТРЕКОВ
 //
 async function searchTracksByMood(mood, languages, genres) {
     const tracks = new Set();
-    const searches = [];
+    const uniqueSearches = new Set();
 
-    // Формируем поисковые запросы
+    // Формирование поиска без дублей
     languages.forEach(lang => {
-        const seeds = mood.seeds[lang];
+        const moodSeeds = mood.seeds[lang];
 
         genres.forEach(genre => {
-            seeds.forEach(seed => {
-                searches.push(`${seed} ${genre}`);
+            moodSeeds.forEach(seed => {
+                uniqueSearches.add(`${seed} ${genre}`);
             });
         });
 
         if (genres.length === 0) {
-            searches.push(...seeds);
+            moodSeeds.forEach(seed => uniqueSearches.add(seed));
         }
     });
 
-    // Перемешиваем запросы для разнообразия
-    searches.sort(() => Math.random() - 0.5);
+    // Параметры эмоций
+    const moodToParams = {
+        happy:   { target_valence: 0.9, target_energy: 0.7 },
+        energetic: { target_valence: 0.7, target_energy: 0.9 },
+        chill:   { target_valence: 0.5, target_energy: 0.3 },
+        sad:     { target_valence: 0.2, target_energy: 0.2 }
+    };
 
-    // Основной поиск
-    for (const query of searches) {
-        if (tracks.size >= 30) break;
+    const recParams = moodToParams[mood.id] || moodToParams.happy;
+    const genreStr = genres.join(',') || null;
 
+    // Recommendations API
+    try {
+        const url = new URL("https://api.spotify.com/v1/recommendations");
+        url.searchParams.set('limit', '20');
+        if (genreStr) url.searchParams.set('seed_genres', genreStr);
+        url.searchParams.set('target_valence', recParams.target_valence);
+        url.searchParams.set('target_energy', recParams.target_energy);
+
+        const recResponse = await fetch(url.toString(), {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+
+        const recData = await recResponse.json();
+        if (recData.tracks) {
+            recData.tracks.forEach(t => tracks.add(t.uri));
+        }
+    } catch (error) {
+        console.error("Ошибка Recommendations API:", error);
+    }
+
+    // Обычный текстовый поиск (оптимизированный)
+    for (const query of uniqueSearches) {
         try {
             const response = await fetch(
-                `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`,
+                `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=7`,
                 { headers: { 'Authorization': `Bearer ${accessToken}` } }
             );
 
             const data = await response.json();
-            if (data.tracks?.items) {
-                for (const item of data.tracks.items) {
-                    if (tracks.size < 30) {
-                        tracks.add(item.uri);
-                    }
-                }
+            if (data.tracks && data.tracks.items) {
+                data.tracks.items.forEach(t => tracks.add(t.uri));
             }
         } catch (error) {
-            console.error('Ошибка поиска треков:', error);
+            console.error('Ошибка поиска:', error);
         }
     }
 
-    // Если после поиска недостаточно треков, добираем рекомендациями
-    if (tracks.size < 30) {
-        try {
-            const genreStr = genres.join(',') || '';
-            const recResponse = await fetch(
-                `https://api.spotify.com/v1/recommendations?limit=${30 - tracks.size}&seed_genres=${genreStr}`,
-                { headers: { 'Authorization': `Bearer ${accessToken}` } }
-            );
-
-            const recData = await recResponse.json();
-            if (recData.tracks) {
-                recData.tracks.forEach(t => {
-                    if (tracks.size < 30) tracks.add(t.uri);
-                });
-            }
-        } catch (err) {
-            console.error('Ошибка Recommendations API:', err);
-        }
-    }
-
-    // Возвращаем ровно 30 треков
-    return Array.from(tracks).slice(0, 30);
+    return Array.from(tracks).slice(0, 35);
 }
 
 // Создание плейлиста
