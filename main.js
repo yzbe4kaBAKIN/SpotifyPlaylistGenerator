@@ -140,7 +140,7 @@ async function createPlaylist() {
         // Добавление треков в плейлист
         await addTracksToPlaylist(playlist.id, trackUris);
 
-        showMessage(`✅ Плейлист "${playlistName}" успешно создан с ${trackUris.length} треками!`, 'success');
+        showMessage(`Плейлист "${playlistName}" успешно создан с ${trackUris.length} треками!`, 'success');
         
         // Сброс формы
         resetForm();
