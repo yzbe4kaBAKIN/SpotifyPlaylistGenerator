@@ -121,7 +121,7 @@ export async function createSpotifyPlaylist(userId, name, description) {
     return await response.json();
 }
 
-// Добавление треков в плейлист ебанный в рот
+// Добавление треков в плейлист
 export async function addTracksToPlaylist(playlistId, trackUris) {
     const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
         method: 'POST',
